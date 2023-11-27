@@ -10,7 +10,9 @@ async fn zero_day_error() -> Result<String, StatusCode> {
 }
 
 async fn build_router() -> Router {
-    Router::new().route("/", get(hello_world))
+    Router::new()
+        .route("/", get(hello_world))
+        .route("/-1/error", get(zero_day_error))
 }
 
 #[cfg(not(tarpaulin_include))]
@@ -31,5 +33,12 @@ mod tests {
         let server = TestServer::new(build_router().await).unwrap();
         let response = server.get("/").expect_success().await;
         assert_eq!(hello_world().await, response.text());
+    }
+
+    #[tokio::test]
+    async fn test_zero_day_error() {
+        let server = TestServer::new(build_router().await).unwrap();
+        let response = server.get("/-1/error").expect_failure().await;
+        response.assert_status(StatusCode::INTERNAL_SERVER_ERROR);
     }
 }
