@@ -17,8 +17,8 @@ async fn day_one(Path(params): Path<HashMap<String, String>>) -> Result<String, 
     if let Some(numbers) = params.get("numbers") {
         let mut numbers = numbers
             .split('/')
-            .map(|n| n.parse::<u32>().unwrap())
-            .collect::<Vec<u32>>();
+            .map(|n| n.parse::<i32>().unwrap())
+            .collect::<Vec<i32>>();
         if 20 < numbers.len() {
             return Err(StatusCode::BAD_REQUEST);
         }
