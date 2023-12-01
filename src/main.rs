@@ -1,5 +1,8 @@
+use axum::extract::Path;
 use axum::http::StatusCode;
 use axum::{routing::get, Router};
+
+use std::collections::HashMap;
 
 async fn hello_world() -> &'static str {
     "Hello, world!"
@@ -9,10 +12,15 @@ async fn zero_day_error() -> Result<String, StatusCode> {
     Err(StatusCode::INTERNAL_SERVER_ERROR)
 }
 
+async fn day_one(Path(params): Path<HashMap<String, String>>) -> String {
+    format!("Hello, {}!", params.get("numbers").unwrap())
+}
+
 async fn build_router() -> Router {
     Router::new()
         .route("/", get(hello_world))
         .route("/-1/error", get(zero_day_error))
+        .route("/:numbers", get(day_one))
 }
 
 #[cfg(not(tarpaulin_include))]
