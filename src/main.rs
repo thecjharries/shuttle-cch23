@@ -13,6 +13,7 @@ async fn zero_day_error() -> Result<String, StatusCode> {
 }
 
 async fn day_one(Path(params): Path<HashMap<String, String>>) -> Result<String, StatusCode> {
+    println!("{:?}", params);
     if let Some(numbers) = params.get("numbers") {
         let mut numbers = numbers
             .split('/')
