@@ -12,8 +12,23 @@ async fn zero_day_error() -> Result<String, StatusCode> {
     Err(StatusCode::INTERNAL_SERVER_ERROR)
 }
 
-async fn day_one(Path(params): Path<HashMap<String, String>>) -> String {
-    format!("Hello, {}!", params.get("numbers").unwrap())
+async fn day_one(Path(params): Path<HashMap<String, String>>) -> Result<String, StatusCode> {
+    if let Some(numbers) = params.get("numbers") {
+        let mut numbers = numbers
+            .split('/')
+            .map(|n| n.parse::<u32>().unwrap())
+            .collect::<Vec<u32>>();
+        if 20 < numbers.len() {
+            return Err(StatusCode::BAD_REQUEST);
+        }
+        let mut accumulator = numbers.pop().unwrap();
+        while 0 < numbers.len() {
+            accumulator ^= numbers.pop().unwrap();
+        }
+        return Ok(format!("{}", accumulator.pow(3)));
+    } else {
+        return Err(StatusCode::BAD_REQUEST);
+    }
 }
 
 async fn build_router() -> Router {
