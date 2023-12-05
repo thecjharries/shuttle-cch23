@@ -242,6 +242,7 @@ dependencies = [
  "axum",
  "axum-test",
  "serde",
+ "serde_json",
  "shuttle-axum",
  "shuttle-runtime",
  "tokio",

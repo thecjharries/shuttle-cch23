@@ -75,21 +75,21 @@ async fn day_four_contest(
     Json(payload): Json<Vec<ContestReindeer>>,
 ) -> Result<Json<ContestResponse>, StatusCode> {
     println!("{:?}", payload);
-    let mut fastest_score = 0;
+    let mut fastest_score = i32::MAX;
     let mut fastest_name = String::new();
-    let mut tallest_score = 0;
+    let mut tallest_score = i32::MAX;
     let mut tallest_name = String::new();
     let mut magician_score = 0;
     let mut magician_name = String::new();
     let mut consumer_score = 0;
     let mut consumer_name = String::new();
     for r in payload {
-        if r.strength > fastest_score {
+        if r.strength < fastest_score {
             fastest_score = r.strength;
             fastest_name = r.name.clone();
         }
-        if r.height > tallest_score {
-            tallest_score = r.height;
+        if r.antler_width < tallest_score {
+            tallest_score = r.antler_width;
             tallest_name = r.name.clone();
         }
         if r.snow_magic_power > magician_score {
@@ -130,6 +130,7 @@ async fn build_router() -> Router {
         .route("/-1/error", get(zero_day_error))
         .route("/1/*numbers", get(day_one))
         .route("/4/strength", post(day_four_strength))
+        .route("/4/contest", post(day_four_contest))
 }
 
 #[cfg(not(tarpaulin_include))]
@@ -144,6 +145,77 @@ async fn main() -> shuttle_axum::ShuttleAxum {
 mod tests {
     use super::*;
     use axum_test::TestServer;
+
+    #[tokio::test]
+    async fn test_day_four_contest() {
+        let server = TestServer::new(build_router().await).unwrap();
+        let response = server
+            .post("/4/contest")
+            .json(
+                // [
+                // {
+                //     "name": "Dasher",
+                //     "strength": 5,
+                //     "speed": 50.4,
+                //     "height": 80,
+                //     "antler_width": 36,
+                //     "snow_magic_power": 9001,
+                //     "favorite_food": "hay",
+                //     "cAnD13s_3ATeN-yesT3rdAy": 2
+                //   },
+                //   {
+                //     "name": "Dancer",
+                //     "strength": 6,
+                //     "speed": 48.2,
+                //     "height": 65,
+                //     "antler_width": 37,
+                //     "snow_magic_power": 4004,
+                //     "favorite_food": "grass",
+                //     "cAnD13s_3ATeN-yesT3rdAy": 5
+                //   }
+                // ]
+                &vec![
+                    ContestReindeer {
+                        name: "Dasher".to_string(),
+                        strength: 5,
+                        speed: 50.4,
+                        height: 80,
+                        antler_width: 36,
+                        snow_magic_power: 9001,
+                        favorite_food: "hay".to_string(),
+                        candies: 2,
+                    },
+                    ContestReindeer {
+                        name: "Dancer".to_string(),
+                        strength: 6,
+                        speed: 48.2,
+                        height: 65,
+                        antler_width: 37,
+                        snow_magic_power: 4004,
+                        favorite_food: "grass".to_string(),
+                        candies: 5,
+                    },
+                ],
+            )
+            .expect_success()
+            .await;
+        // {
+        //   "fastest": "Speeding past the finish line with a strength of 5 is Dasher",
+        //   "tallest": "Dasher is standing tall with his 36 cm wide antlers",
+        //   "magician": "Dasher could blast you away with a snow magic power of 9001",
+        //   "consumer": "Dancer ate lots of candies, but also some grass"
+        // }
+        let expected_result = ContestResponse {
+            fastest: "Speeding past the finish line with a strength of 5 is Dasher".to_string(),
+            tallest: "Dasher is standing tall with his 36 cm wide antlers".to_string(),
+            magician: "Dasher could blast you away with a snow magic power of 9001".to_string(),
+            consumer: "Dancer ate lots of candies, but also some grass".to_string(),
+        };
+        assert_eq!(
+            serde_json::to_string(&expected_result).unwrap(),
+            response.text()
+        );
+    }
 
     #[tokio::test]
     async fn test_day_four_strength() {
