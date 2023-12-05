@@ -37,15 +37,30 @@ async fn day_one(Path(params): Path<HashMap<String, String>>) -> Result<String, 
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct Reindeer {
+struct StrengthReindeer {
     name: String,
     strength: i32,
 }
 
-async fn day_four_strength(Json(payload): Json<Vec<Reindeer>>) -> Result<String, StatusCode> {
+async fn day_four_strength(
+    Json(payload): Json<Vec<StrengthReindeer>>,
+) -> Result<String, StatusCode> {
     println!("{:?}", payload);
     let strength_sum = payload.iter().fold(0, |acc, r| acc + r.strength);
     Ok(format!("{}", strength_sum))
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct Reindeer {
+    name: String,
+    strength: i32,
+    speed: f32,
+    height: i32,
+    antler_width: i32,
+    snow_magic_power: u64,
+    favorite_food: String,
+    #[serde(rename = "cAnD13s_3ATeN-yesT3rdAy")]
+    candies: u32,
 }
 
 async fn build_router() -> Router {
@@ -80,19 +95,19 @@ mod tests {
                 // { "name": "Prancer", "strength": 4 },
                 // { "name": "Vixen", "strength": 7 }
                 &vec![
-                    Reindeer {
+                    StrengthReindeer {
                         name: "Dasher".to_string(),
                         strength: 5,
                     },
-                    Reindeer {
+                    StrengthReindeer {
                         name: "Dancer".to_string(),
                         strength: 6,
                     },
-                    Reindeer {
+                    StrengthReindeer {
                         name: "Prancer".to_string(),
                         strength: 4,
                     },
-                    Reindeer {
+                    StrengthReindeer {
                         name: "Vixen".to_string(),
                         strength: 7,
                     },
