@@ -1,4 +1,4 @@
-use axum::extract::Path;
+use axum::extract::{Json, Path};
 use axum::http::StatusCode;
 use axum::{routing::get, Router};
 
@@ -30,6 +30,25 @@ async fn day_one(Path(params): Path<HashMap<String, String>>) -> Result<String, 
     } else {
         return Err(StatusCode::BAD_REQUEST);
     }
+}
+
+#[derive(Debug, PartialEq)]
+struct Reindeer {
+    name: String,
+    strength: i32,
+}
+
+async fn day_four_strength(Json(payload): Json<Vec<Reindeer>>) -> Result<String, StatusCode> {
+    let mut strongest = Reindeer {
+        name: String::new(),
+        strength: 0,
+    };
+    for reindeer in payload {
+        if strongest.strength < reindeer.strength {
+            strongest = reindeer;
+        }
+    }
+    Ok(strongest.name)
 }
 
 async fn build_router() -> Router {
