@@ -1,6 +1,10 @@
 use axum::extract::{Json, Path};
 use axum::http::StatusCode;
-use axum::{routing::get, Router};
+use axum::{
+    routing::{get, post},
+    Router,
+};
+use serde::{Deserialize, Serialize};
 
 use std::collections::HashMap;
 
@@ -32,23 +36,16 @@ async fn day_one(Path(params): Path<HashMap<String, String>>) -> Result<String, 
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct Reindeer {
     name: String,
     strength: i32,
 }
 
 async fn day_four_strength(Json(payload): Json<Vec<Reindeer>>) -> Result<String, StatusCode> {
-    let mut strongest = Reindeer {
-        name: String::new(),
-        strength: 0,
-    };
-    for reindeer in payload {
-        if strongest.strength < reindeer.strength {
-            strongest = reindeer;
-        }
-    }
-    Ok(strongest.name)
+    println!("{:?}", payload);
+    let strength_sum = payload.iter().fold(0, |acc, r| acc + r.strength);
+    Ok(format!("{}", strength_sum))
 }
 
 async fn build_router() -> Router {
@@ -56,6 +53,7 @@ async fn build_router() -> Router {
         .route("/", get(hello_world))
         .route("/-1/error", get(zero_day_error))
         .route("/1/*numbers", get(day_one))
+        .route("/4/strength", post(day_four_strength))
 }
 
 #[cfg(not(tarpaulin_include))]
@@ -70,6 +68,40 @@ async fn main() -> shuttle_axum::ShuttleAxum {
 mod tests {
     use super::*;
     use axum_test::TestServer;
+
+    #[tokio::test]
+    async fn test_day_four_strength() {
+        let server = TestServer::new(build_router().await).unwrap();
+        let response = server
+            .post("/4/strength")
+            .json(
+                // { "name": "Dasher", "strength": 5 },
+                // { "name": "Dancer", "strength": 6 },
+                // { "name": "Prancer", "strength": 4 },
+                // { "name": "Vixen", "strength": 7 }
+                &vec![
+                    Reindeer {
+                        name: "Dasher".to_string(),
+                        strength: 5,
+                    },
+                    Reindeer {
+                        name: "Dancer".to_string(),
+                        strength: 6,
+                    },
+                    Reindeer {
+                        name: "Prancer".to_string(),
+                        strength: 4,
+                    },
+                    Reindeer {
+                        name: "Vixen".to_string(),
+                        strength: 7,
+                    },
+                ],
+            )
+            .expect_success()
+            .await;
+        assert_eq!("22", response.text());
+    }
 
     #[tokio::test]
     async fn test_day_one() {
