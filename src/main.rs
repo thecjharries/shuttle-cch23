@@ -51,7 +51,7 @@ async fn day_four_strength(
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct Reindeer {
+struct ContestReindeer {
     name: String,
     strength: i32,
     speed: f32,
@@ -61,6 +61,67 @@ struct Reindeer {
     favorite_food: String,
     #[serde(rename = "cAnD13s_3ATeN-yesT3rdAy")]
     candies: u32,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct ContestResponse {
+    fastest: String,
+    tallest: String,
+    magician: String,
+    consumer: String,
+}
+
+async fn day_four_contest(
+    Json(payload): Json<Vec<ContestReindeer>>,
+) -> Result<Json<ContestResponse>, StatusCode> {
+    println!("{:?}", payload);
+    let mut fastest_score = 0;
+    let mut fastest_name = String::new();
+    let mut tallest_score = 0;
+    let mut tallest_name = String::new();
+    let mut magician_score = 0;
+    let mut magician_name = String::new();
+    let mut consumer_score = 0;
+    let mut consumer_name = String::new();
+    for r in payload {
+        if r.strength > fastest_score {
+            fastest_score = r.strength;
+            fastest_name = r.name.clone();
+        }
+        if r.height > tallest_score {
+            tallest_score = r.height;
+            tallest_name = r.name.clone();
+        }
+        if r.snow_magic_power > magician_score {
+            magician_score = r.snow_magic_power;
+            magician_name = r.name.clone();
+        }
+        if r.candies > consumer_score {
+            consumer_score = r.candies;
+            consumer_name = r.name.clone();
+        }
+    }
+    // {
+    //   "fastest": "Speeding past the finish line with a strength of 5 is Dasher",
+    //   "tallest": "Dasher is standing tall with his 36 cm wide antlers",
+    //   "magician": "Dasher could blast you away with a snow magic power of 9001",
+    //   "consumer": "Dancer ate lots of candies, but also some grass"
+    // }
+    Ok(Json(ContestResponse {
+        fastest: format!(
+            "Speeding past the finish line with a strength of {} is {}",
+            fastest_score, fastest_name
+        ),
+        tallest: format!(
+            "{} is standing tall with his {} cm wide antlers",
+            tallest_name, tallest_score
+        ),
+        magician: format!(
+            "{} could blast you away with a snow magic power of {}",
+            magician_name, magician_score
+        ),
+        consumer: format!("{} ate lots of candies, but also some grass", consumer_name),
+    }))
 }
 
 async fn build_router() -> Router {
